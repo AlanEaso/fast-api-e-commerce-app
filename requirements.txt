@@ -1,0 +1,4 @@
+fastapi[standard]
+pydantic==2.10.4
+sqlalchemy==2.0.23
+pytest==7.4.3
