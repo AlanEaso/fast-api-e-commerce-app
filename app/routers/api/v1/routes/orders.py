@@ -17,4 +17,4 @@ router = APIRouter(
 
 @router.post("/", response_model=Order)
 async def create_order(order: OrderCreate, db: Session = Depends(get_session)):
-    return OrderManagementService(db).create_order(order)
+    return OrderManagementService(db).process_order(order)

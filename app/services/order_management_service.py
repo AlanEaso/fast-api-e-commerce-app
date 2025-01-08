@@ -15,54 +15,13 @@ class OrderManagementService:
     def __init__(self, db: Session):
         self.db = db
 
-    def create_order(self, order_request: OrderCreate):
-        total_price = 0
-        products_to_update = []
+    def process_order(self, order_request: OrderCreate):
         try:
-            # Starting a transaction to ensure that all operations are atomic
-            with self.db.begin():
-                # Making sure all products in the request are available
-                for item in order_request.products:
-                    # Locking the product row to prevent
-                    # concurrent updates and getting the wrong stock value
-                    product = self.__lock_product(item.product_id)
-                    self.__check_stock_integrity(product, item.quantity)
-
-                    # product.stock -= item.quantity
-                    total_price += product.price * item.quantity
-                    products_to_update.append((product, item.quantity))
-
-                
-                
-                # Creating the order
-                order = self.__create_new_order(products= order_request.products,
-                                                total_price=total_price,
-                                                status= OrderStatus.PENDING)
-                
-                # Flush to ensure the order gets an ID
-                self.db.flush()
-              
-                # Refresh to get the latest state including the ID
-                self.db.refresh(order)
-
-            # Some payment or other functionalities here which updates the order status
-
-            with self.db.begin():
-                
-                order.status = OrderStatus.COMPLETED
-
-                if order.status == OrderStatus.COMPLETED:
-
-                  self.__update_stock(products_to_update)
-
-                  # Flush to ensure the order gets an ID
-                  self.db.flush()
-              
-                  # Refresh to get the latest state including the ID
-                  self.db.refresh(order)
-
-                return order    
-
+            order, products_to_update = self.__create_order(order_request=order_request)
+            order = self.__update_order_status(order)
+            self.__verify_and_update_product_stock(order, products_to_update)
+            return order
+        
         except SQLAlchemyError as e:
             logger.error('Error creating product: %s', {str(e)})
             raise AppException(
@@ -83,6 +42,60 @@ class OrderManagementService:
             logger.error('Error creating product: %s', {str(e)})
             self.db.rollback()
             raise e
+
+    def __create_order(self, order_request: OrderCreate):
+        total_price = 0
+        products_to_update = []
+        # Starting a transaction to ensure that all operations are atomic
+        with self.db.begin():
+            # Making sure all products in the request are available
+            for item in order_request.products:
+                # Locking the product row to prevent
+                # concurrent updates and getting the wrong stock value
+                product = self.__lock_product(item.product_id)
+                self.__check_stock_integrity(product, item.quantity)
+
+                # product.stock -= item.quantity
+                total_price += product.price * item.quantity
+                products_to_update.append((product, item.quantity))
+
+            
+            
+            # Creating the order
+            order = self.__create_new_order(products= order_request.products,
+                                            total_price=total_price,
+                                            status= OrderStatus.PENDING)
+            
+            # Flush to ensure the order gets an ID
+            self.db.flush()
+          
+            # Refresh to get the latest state including the ID
+            self.db.refresh(order)
+
+        return order, products_to_update
+
+            # Some payment or other functionalities here which updates the order status
+        
+    def __update_order_status(self, order) -> Order:
+        order.status = OrderStatus.COMPLETED
+        self.db.add(order)
+        self.db.commit()
+        return order
+    
+    def __verify_and_update_product_stock(self, order, products_to_update) -> None:
+        with self.db.begin():
+
+            if order.status == OrderStatus.COMPLETED:
+
+              self.__update_stock(products_to_update)
+
+              # Flush to ensure the order gets an ID
+              self.db.flush()
+          
+              # Refresh to get the latest state including the ID
+              self.db.refresh(order)
+
+            return order    
 
 
     def __lock_product(self, product_id) -> Product:
