@@ -7,7 +7,7 @@ from app.core.db import get_session
 from app.services.product_service import ProductService
 
 router = APIRouter(
-    prefix="/products",
+    prefix="",
     tags=["products"],
     dependencies=[Depends(get_product_header)],
     responses={404: {"description": "Not found"}},

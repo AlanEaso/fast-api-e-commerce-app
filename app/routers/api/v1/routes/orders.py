@@ -9,7 +9,7 @@ from app.services.order_management_service import OrderManagementService
 router = APIRouter()
 
 router = APIRouter(
-    prefix="/orders",
+    prefix="",
     tags=["orders"],
     dependencies=[Depends(get_order_header)],
     responses={404: {"description": "Not found"}},
