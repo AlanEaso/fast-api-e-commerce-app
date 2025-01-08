@@ -16,7 +16,8 @@ class ProductService:
 
     def create_product(self, product: ProductCreate):
         try:
-            db_product = Product(**product.dict())
+            self.__validate_create_params(product)
+            db_product = Product(**product.model_dump())
             self.db.add(db_product)
             self.db.commit()
             self.db.refresh(db_product)
@@ -39,6 +40,15 @@ class ProductService:
                 details={'error_details': str(e)},
                 original_error=e
             ) from e
+        except Exception as e:
+            logger.error('Error creating product: %s', {str(e)})
+            self.db.rollback()
+            raise AppException(
+                error_code=ErrorCode.UNKNOWN_ERROR,
+                message="An unknown error occurred while creating the product",
+                details={'error_details': str(e)},
+                original_error=e
+            ) from e
     
     def get_all_products(self, filter_query):
         try:
@@ -54,3 +64,10 @@ class ProductService:
                 details={'error_details': str(e)},
                 original_error=e
             ) from e
+        
+    def __validate_create_params(self, params):
+        if params.price < 0:
+            raise ValueError("Price cannot be negative")
+        if params.stock < 0:
+            raise ValueError("Stock cannot be negative")
+        return True
