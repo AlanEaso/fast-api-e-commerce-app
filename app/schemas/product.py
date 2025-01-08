@@ -13,9 +13,12 @@ class Product(ProductBase):
     id: int
 
     class Config:
-        orm_mode = True
         from_attributes = True
 
+class AllProducts(BaseModel):
+    products: list[Product]
+
 class FilterProductParams(BaseModel):
-    page_no: int = Field(1, ge=1)
+    skip: int = Field(0, ge=0)
     limit: int = Field(1, ge=1)
+    
