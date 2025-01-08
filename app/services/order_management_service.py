@@ -47,7 +47,7 @@ class OrderManagementService:
         total_price = 0
         products_to_update = []
         # Starting a transaction to ensure that all operations are atomic
-        with self.db.begin():
+        with self.db.begin_nested():
             # Making sure all products in the request are available
             for item in order_request.products:
                 # Locking the product row to prevent
@@ -94,8 +94,16 @@ class OrderManagementService:
           
               # Refresh to get the latest state including the ID
               self.db.refresh(order)
+            else:
+                raise AppException(
+                    error_code=ErrorCode.CANNOT_UPDATE_STOCK,
+                    message="Stock cannot be updated if it's not in completed state",
+                    details={'order_id': order.id}
+                )
 
-            return order    
+        self.db.commit()
+
+        return order    
 
 
     def __lock_product(self, product_id) -> Product:
