@@ -10,8 +10,10 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python packages
-COPY requirements.txt .
+ARG ENV={ENV}
+COPY requirements.txt dev_requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
+RUN if [ "$ENV" = "development" ] ; then pip install --no-cache-dir -r dev_requirements.txt ; fi
 
 # Copy application code
 COPY . .

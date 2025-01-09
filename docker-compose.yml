@@ -2,7 +2,10 @@ version: '3.8'
 
 services:
   api:
-    build: .
+    build: 
+      context: .
+      args:
+        - ENV=${ENV}
     ports:
       - "${API_PORT}:8000"
     env_file:
