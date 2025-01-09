@@ -18,5 +18,9 @@ RUN if [ "$ENV" = "development" ] ; then pip install --no-cache-dir -r dev_requi
 # Copy application code
 COPY . .
 
+# Fix line endings and permissions for entrypoint
+RUN sed -i 's/\r$//g' entrypoint.sh && \
+    chmod +x entrypoint.sh
+
 # Run with uvicorn
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+ENTRYPOINT ["/bin/bash", "./entrypoint.sh"]
