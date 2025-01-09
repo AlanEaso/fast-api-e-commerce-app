@@ -44,6 +44,7 @@ class OrderManagementService:
             raise e
 
     def __create_order(self, order_request: OrderCreate):
+        self.__validate_order_request(order_request)
         total_price = 0
         products_to_update = []
         # Starting a transaction to ensure that all operations are atomic
@@ -142,5 +143,21 @@ class OrderManagementService:
             product.stock -= quanity
             logger.info('Updating stock for product: %s', {product.id})
             self.db.add(product)
+
+    def __validate_order_request(self, order_request: OrderCreate) -> None:
+        if not order_request.products or len(order_request.products) == 0:
+            raise AppException(
+                error_code=ErrorCode.INVALID_ORDER_DATA,
+                message="Invalid order data",
+                details={'products': order_request.products}
+            )
+        
+        for item in order_request.products:
+            if item.quantity <= 0:
+                raise AppException(
+                    error_code=ErrorCode.INVALID_ORDER_DATA,
+                    message="Quantity of a product can never be less than 1",
+                    details={'product_id': item.product_id}
+                )
 
 
