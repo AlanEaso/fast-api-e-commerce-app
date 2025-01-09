@@ -41,7 +41,6 @@ class ErrorCode(Enum):
     ORDER_CREATE_ERROR = (501, HTTPStatus.INTERNAL_SERVER_ERROR, "Failed to Create Order")
     UNKNOWN_ERROR = (500, HTTPStatus.INTERNAL_SERVER_ERROR, "An unknown error occurred")
     CANNOT_UPDATE_STOCK = (40002, HTTPStatus.BAD_REQUEST, "Cannot update stock if order is not completed")
-    INSUFFICIENT_INVENTORY = (40003, HTTPStatus.CONFLICT, "Insufficient inventory")
 
     def __init__(self, code: int, status: HTTPStatus, message: str):
         self.code = code
