@@ -67,6 +67,7 @@ cp .env.example .env
 - `PRODUCT_TOKEN`: Custom token for product-related functionality
 - `ORDER_TOKEN`: Custom token for order-related functionality
 
+Make sure the PRODUCT_TOKEN and ORDER_TOKEN are correctly initialized as this will be asked to be passed as header values. (X-TOKEN value)
 ## Getting Started
 
 ### Build and Run
