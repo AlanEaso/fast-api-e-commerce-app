@@ -20,5 +20,5 @@ class AllProducts(BaseModel):
 
 class FilterProductParams(BaseModel):
     skip: int = Field(0, ge=0)
-    limit: int = Field(1, ge=1)
+    limit: int = Field(10, ge=1)
     
